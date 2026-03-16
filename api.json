@@ -1,0 +1,1441 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "KPI Ingestion API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/events/order": {
+      "post": {
+        "tags": [
+          "ingest"
+        ],
+        "summary": "Publish order event",
+        "description": "Validates order payload and publishes it to the Kafka orders topic. Returns accepted status with final event_id.",
+        "operationId": "ingest_order_events_order_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted status and event identifier.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/events/session": {
+      "post": {
+        "tags": [
+          "ingest"
+        ],
+        "summary": "Publish session event",
+        "description": "Validates session payload and publishes it to the Kafka sessions topic. Returns accepted status with final event_id.",
+        "operationId": "ingest_session_events_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted status and event identifier.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/kpi/latest": {
+      "get": {
+        "tags": [
+          "kpi"
+        ],
+        "summary": "Get latest KPI point",
+        "description": "Returns the latest aggregated KPI point for the selected bucket (minute or hour), with optional segmentation by channel/campaign.",
+        "operationId": "kpi_latest_kpi_latest_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "minute",
+                "hour"
+              ],
+              "type": "string",
+              "description": "Aggregation bucket: minute or hour.",
+              "default": "minute",
+              "title": "Bucket"
+            },
+            "description": "Aggregation bucket: minute or hour."
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional channel filter.",
+              "title": "Channel"
+            },
+            "description": "Optional channel filter."
+          },
+          {
+            "name": "campaign",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional campaign filter.",
+              "title": "Campaign"
+            },
+            "description": "Optional campaign filter."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest KPI point and applied filters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KpiLatest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kpi/minute": {
+      "get": {
+        "tags": [
+          "kpi"
+        ],
+        "summary": "Get minute KPI series",
+        "description": "Returns KPI time series with minute granularity. If from/to are omitted, default range is the last 2 hours.",
+        "operationId": "kpi_minute_kpi_minute_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range start (UTC).",
+              "title": "From"
+            },
+            "description": "Range start (UTC)."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range end (UTC).",
+              "title": "To"
+            },
+            "description": "Range end (UTC)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 1,
+              "description": "Maximum points to return.",
+              "default": 2000,
+              "title": "Limit"
+            },
+            "description": "Maximum points to return."
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional channel filter.",
+              "title": "Channel"
+            },
+            "description": "Optional channel filter."
+          },
+          {
+            "name": "campaign",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional campaign filter.",
+              "title": "Campaign"
+            },
+            "description": "Optional campaign filter."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Minute KPI series for the selected period.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KpiSeries"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kpi/hour": {
+      "get": {
+        "tags": [
+          "kpi"
+        ],
+        "summary": "Get hour KPI series",
+        "description": "Returns KPI time series with hour granularity. If from/to are omitted, default range is the last 3 days.",
+        "operationId": "kpi_hour_kpi_hour_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range start (UTC).",
+              "title": "From"
+            },
+            "description": "Range start (UTC)."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range end (UTC).",
+              "title": "To"
+            },
+            "description": "Range end (UTC)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 1,
+              "description": "Maximum points to return.",
+              "default": 2000,
+              "title": "Limit"
+            },
+            "description": "Maximum points to return."
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional channel filter.",
+              "title": "Channel"
+            },
+            "description": "Optional channel filter."
+          },
+          {
+            "name": "campaign",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional campaign filter.",
+              "title": "Campaign"
+            },
+            "description": "Optional campaign filter."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hour KPI series for the selected period.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KpiSeries"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts": {
+      "get": {
+        "tags": [
+          "kpi"
+        ],
+        "summary": "Get alerts list",
+        "description": "Returns alerts in the requested time range. If from/to are omitted, default range is the last 24 hours.",
+        "operationId": "alerts_alerts_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range start (UTC).",
+              "title": "From"
+            },
+            "description": "Range start (UTC)."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range end (UTC).",
+              "title": "To"
+            },
+            "description": "Range end (UTC)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "description": "Maximum alerts to return.",
+              "default": 500,
+              "title": "Limit"
+            },
+            "description": "Maximum alerts to return."
+          },
+          {
+            "name": "kpi",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AlertType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional alert type filter.",
+              "title": "Kpi"
+            },
+            "description": "Optional alert type filter."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alerts list for the selected period.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertSeries"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics/freshness": {
+      "get": {
+        "tags": [
+          "kpi"
+        ],
+        "summary": "Get freshness metrics",
+        "description": "Returns latest event timestamps and freshness (seconds) for orders and sessions, optionally filtered by segment.",
+        "operationId": "metrics_freshness_metrics_freshness_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional channel filter.",
+              "title": "Channel"
+            },
+            "description": "Optional channel filter."
+          },
+          {
+            "name": "campaign",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional campaign filter.",
+              "title": "Campaign"
+            },
+            "description": "Optional campaign filter."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Freshness metrics for orders and sessions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FreshnessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics/time-to-signal": {
+      "get": {
+        "tags": [
+          "kpi"
+        ],
+        "summary": "Get time-to-signal metrics",
+        "description": "Returns average and max delay between event_time and processed_time for orders and sessions in the selected interval.",
+        "operationId": "metrics_time_to_signal_metrics_time_to_signal_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "minute",
+                "hour"
+              ],
+              "type": "string",
+              "description": "Aggregation bucket: minute or hour.",
+              "default": "minute",
+              "title": "Bucket"
+            },
+            "description": "Aggregation bucket: minute or hour."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range start (UTC).",
+              "title": "From"
+            },
+            "description": "Range start (UTC)."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Range end (UTC).",
+              "title": "To"
+            },
+            "description": "Range end (UTC)."
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional channel filter.",
+              "title": "Channel"
+            },
+            "description": "Optional channel filter."
+          },
+          {
+            "name": "campaign",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional campaign filter.",
+              "title": "Campaign"
+            },
+            "description": "Optional campaign filter."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Time-to-signal metrics for orders and sessions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeToSignalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlertItem": {
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Bucket"
+          },
+          "kpi": {
+            "type": "string",
+            "title": "Kpi"
+          },
+          "alert_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlertType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Value"
+          },
+          "baseline_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Value"
+          },
+          "delta_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Pct"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket",
+          "kpi",
+          "created_at"
+        ],
+        "title": "AlertItem"
+      },
+      "AlertSeries": {
+        "properties": {
+          "from_ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "From Ts"
+          },
+          "to_ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "To Ts"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AlertItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_ts",
+          "to_ts",
+          "items"
+        ],
+        "title": "AlertSeries"
+      },
+      "AlertType": {
+        "type": "string",
+        "enum": [
+          "revenue",
+          "views"
+        ],
+        "title": "AlertType"
+      },
+      "FreshnessResponse": {
+        "properties": {
+          "now": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Now"
+          },
+          "orders_last_event_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orders Last Event Time"
+          },
+          "sessions_last_event_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions Last Event Time"
+          },
+          "orders_freshness_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orders Freshness Seconds"
+          },
+          "sessions_freshness_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions Freshness Seconds"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campaign"
+          }
+        },
+        "type": "object",
+        "required": [
+          "now"
+        ],
+        "title": "FreshnessResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IngestResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "event_id"
+        ],
+        "title": "IngestResponse"
+      },
+      "KpiLatest": {
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "title": "Bucket"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campaign"
+          },
+          "point": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KpiPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket"
+        ],
+        "title": "KpiLatest"
+      },
+      "KpiPoint": {
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Bucket"
+          },
+          "revenue": {
+            "type": "number",
+            "title": "Revenue"
+          },
+          "order_count": {
+            "type": "integer",
+            "title": "Order Count"
+          },
+          "average_order_value": {
+            "type": "number",
+            "title": "Average Order Value",
+            "default": 0
+          },
+          "view_count": {
+            "type": "integer",
+            "title": "View Count"
+          },
+          "checkout_count": {
+            "type": "integer",
+            "title": "Checkout Count"
+          },
+          "purchase_count": {
+            "type": "integer",
+            "title": "Purchase Count"
+          },
+          "conversion_rate": {
+            "type": "number",
+            "title": "Conversion Rate",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket",
+          "revenue",
+          "order_count",
+          "view_count",
+          "checkout_count",
+          "purchase_count"
+        ],
+        "title": "KpiPoint"
+      },
+      "KpiSeries": {
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "title": "Bucket"
+          },
+          "from_ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "From Ts"
+          },
+          "to_ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "To Ts"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campaign"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/KpiPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket",
+          "from_ts",
+          "to_ts",
+          "points"
+        ],
+        "title": "KpiSeries"
+      },
+      "OrderEvent": {
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Order Id"
+          },
+          "customer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id"
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campaign"
+          },
+          "event_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Time"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_id",
+          "amount",
+          "event_time"
+        ],
+        "title": "OrderEvent"
+      },
+      "SessionEvent": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Session Id"
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "view",
+              "checkout",
+              "purchase"
+            ],
+            "title": "Event Type"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campaign"
+          },
+          "event_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Time"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "event_type",
+          "event_time"
+        ],
+        "title": "SessionEvent"
+      },
+      "TimeToSignalItem": {
+        "properties": {
+          "avg_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Seconds"
+          },
+          "max_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Seconds"
+          }
+        },
+        "type": "object",
+        "title": "TimeToSignalItem"
+      },
+      "TimeToSignalResponse": {
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "title": "Bucket"
+          },
+          "from_ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "From Ts"
+          },
+          "to_ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "To Ts"
+          },
+          "orders": {
+            "$ref": "#/components/schemas/TimeToSignalItem"
+          },
+          "sessions": {
+            "$ref": "#/components/schemas/TimeToSignalItem"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Campaign"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket",
+          "from_ts",
+          "to_ts",
+          "orders",
+          "sessions"
+        ],
+        "title": "TimeToSignalResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  }
+}
