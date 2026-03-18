@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'screens/home_screen.dart';
+import 'screens/home/home_screen.dart';
 import 'cubit/order_cubit.dart';
 import 'services/api_client.dart';
 import 'config.dart';
@@ -28,7 +28,10 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blueAccent,
         scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        appBarTheme: const AppBarTheme(backgroundColor: Colors.white, foregroundColor: Colors.black),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+        ),
       ),
       home: BlocProvider(
         create: (_) => OrderCubit(apiClient: apiClient),

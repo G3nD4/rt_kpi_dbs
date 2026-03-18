@@ -11,11 +11,7 @@ class OrderState {
 
   OrderState({required this.orders, this.loading = false, this.sessionId});
 
-  OrderState copyWith({
-    List<OrderEvent>? orders,
-    bool? loading,
-    String? sessionId,
-  }) {
+  OrderState copyWith({List<OrderEvent>? orders, bool? loading, String? sessionId}) {
     return OrderState(
       orders: orders ?? this.orders,
       loading: loading ?? this.loading,
@@ -28,33 +24,50 @@ class OrderCubit extends Cubit<OrderState> {
   final OrderRepository repository;
   final Uuid _uuid = const Uuid();
   String? _customerId;
-  
+
   String get customerId {
     _customerId ??= _uuid.v4().toString();
     return _customerId!;
   }
 
-  OrderCubit({required ApiClient apiClient})
-    : repository = OrderRepository(apiClient),
-      super(OrderState(orders: [])) {
+  OrderCubit({required ApiClient apiClient}) : repository = OrderRepository(apiClient), super(OrderState(orders: [])) {
     _loadMockOrders();
   }
 
   void _loadMockOrders() {
     final now = DateTime.now().toUtc().toIso8601String();
-    final mocked = List.generate(
-      5,
-      (i) => OrderEvent(
-        orderId: 'order_${i + 1}',
+    final channels = ['web', 'app', 'email', 'store', 'partner'];
+    final campaigns = ['brand', 'promo', 'holiday', 'newuser'];
+    final products = [
+      'Headphones',
+      'Kestrel Smartwatch',
+      'Nimbus Portable SSD',
+      'Horizon Espresso',
+      'Lumen Desk Lamp',
+      'Cascade Water Bottle',
+      'Voyager Backpack',
+      'Pulse Wireless Charger',
+      'Echo Studio Speaker',
+      'Atlas Running Shoes',
+      'Solstice Sunglasses',
+      'Orbit Action Camera',
+    ];
+
+    final mocked = List.generate(products.length, (i) {
+      final ch = channels[i % channels.length];
+      final camp = campaigns[i % campaigns.length];
+      final product = products[i % products.length];
+      return OrderEvent(
+        orderId: product,
         customerId: customerId,
-        amount: (i + 1) * 100.0,
+        amount: ((i + 1) * 75.0) + (i % 4) * 25,
         currency: 'RUB',
-        channel: 'web',
-        campaign: 'brand',
+        channel: ch,
+        campaign: camp,
         eventTime: now,
         eventId: _uuid.v4().toString(),
-      ),
-    );
+      );
+    });
     emit(state.copyWith(orders: mocked));
   }
 
@@ -102,8 +115,6 @@ class OrderCubit extends Cubit<OrderState> {
 
     // simulate processing delay
     await Future.delayed(const Duration(seconds: 2));
-
-    final time = DateTime.now().toUtc().toIso8601String();
 
     final orderEvent = OrderEvent(
       orderId: order.orderId,

@@ -8,18 +8,27 @@ class OrderEvent {
   final String eventTime;
   final String? eventId;
 
-  OrderEvent({required this.orderId, this.customerId, required this.amount, required this.currency, this.channel, this.campaign, required this.eventTime, this.eventId});
+  OrderEvent({
+    required this.orderId,
+    this.customerId,
+    required this.amount,
+    required this.currency,
+    this.channel,
+    this.campaign,
+    required this.eventTime,
+    this.eventId,
+  });
 
   Map<String, dynamic> toJson() => {
-        'order_id': orderId,
-        'customer_id': customerId,
-        'amount': amount,
-        'currency': currency,
-        'channel': channel,
-        'campaign': campaign,
-        'event_time': eventTime,
-        'event_id': eventId,
-      };
+    'order_id': orderId,
+    'customer_id': customerId,
+    'amount': amount,
+    'currency': currency,
+    'channel': channel,
+    'campaign': campaign,
+    'event_time': eventTime,
+    'event_id': eventId,
+  };
 }
 
 class SessionEvent {
@@ -31,15 +40,23 @@ class SessionEvent {
   final String eventTime;
   final String? eventId;
 
-  SessionEvent({required this.sessionId, required this.eventType, this.userId, this.channel, this.campaign, required this.eventTime, this.eventId});
+  SessionEvent({
+    required this.sessionId,
+    required this.eventType,
+    this.userId,
+    this.channel,
+    this.campaign,
+    required this.eventTime,
+    this.eventId,
+  });
 
   Map<String, dynamic> toJson() => {
-        'session_id': sessionId,
-        'event_type': eventType,
-        'user_id': userId,
-        'channel': channel,
-        'campaign': campaign,
-        'event_time': eventTime,
-        'event_id': eventId,
-      };
+    'session_id': sessionId,
+    'event_type': eventType,
+    'user_id': userId,
+    'channel': channel,
+    'campaign': campaign,
+    'event_time': eventTime,
+    'event_id': eventId,
+  };
 }
