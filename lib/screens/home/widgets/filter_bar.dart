@@ -22,33 +22,51 @@ class FilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 12.0,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(right: 12.0),
-          child: Text(
-            'Channel:',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.secondaryText),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Channel:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.secondaryText,
+                ),
+              ),
+              FilterChips(
+                filters: channelFilters,
+                active: activeChannel,
+                onSelected: onChannelChanged,
+              ),
+            ],
           ),
         ),
-        Expanded(
-          child: SizedBox(
-            height: 48,
-            child: FilterChips(filters: channelFilters, active: activeChannel, onSelected: onChannelChanged),
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(right: 12.0),
-          child: Text(
-            'Campaign:',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.secondaryText),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Campaign:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.secondaryText,
+                ),
+              ),
+              FilterChips(
+                filters: campaignFilters,
+                active: activeCampaign,
+                onSelected: onCampaignChanged,
+              ),
+            ],
           ),
-        ),
-        SizedBox(
-          width: 180,
-          height: 48,
-          child: FilterChips(filters: campaignFilters, active: activeCampaign, onSelected: onCampaignChanged),
         ),
       ],
     );

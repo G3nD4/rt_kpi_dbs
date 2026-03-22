@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rt_kpi_dbs/models/event_models.dart';
 import '../../app_theme.dart';
 import '../../cubit/order_cubit.dart';
 import 'widgets/order_info.dart';
 import 'widgets/order_actions.dart';
 
 class OrderDetailScreen extends StatelessWidget {
-  final int index;
-  const OrderDetailScreen({super.key, required this.index});
+  final OrderEvent order;
+  const OrderDetailScreen(this.order, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,15 +19,14 @@ class OrderDetailScreen extends StatelessWidget {
       backgroundColor: AppTheme.scaffoldBackground,
       body: BlocBuilder<OrderCubit, OrderState>(
         builder: (context, state) {
-          final order = state.orders[index];
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                OrderInfo(order: order, index: index),
+                OrderInfo(order: order),
                 const SizedBox(height: 16),
-                OrderActions(index: index),
+                OrderActions(order: order),
               ],
             ),
           );

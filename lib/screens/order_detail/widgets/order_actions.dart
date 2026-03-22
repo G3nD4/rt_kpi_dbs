@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rt_kpi_dbs/models/event_models.dart';
 import '../../../app_theme.dart';
 import '../../../cubit/order_cubit.dart';
 
 class OrderActions extends StatelessWidget {
-  final int index;
-  const OrderActions({super.key, required this.index});
+  final OrderEvent order;
+  const OrderActions({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +16,10 @@ class OrderActions extends StatelessWidget {
         ElevatedButton(
           onPressed: () async {
             final messenger = ScaffoldMessenger.of(context);
-            await cubit.checkout(index);
-            messenger.showSnackBar(const SnackBar(content: Text('Checkout event sent')));
+            await cubit.checkout(order);
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Checkout event sent')),
+            );
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accent),
           child: const Text('Make order'),
@@ -28,14 +31,24 @@ class OrderActions extends StatelessWidget {
               onPressed: state.loading
                   ? null
                   : () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      final navigator = Navigator.of(context);
-                      final ok = await cubit.purchase(index);
-                      navigator.pop();
-                      messenger.showSnackBar(SnackBar(content: Text(ok ? 'Purchase completed' : 'Purchase failed')));
+                      final ok = await cubit.purchase(order);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              ok ? 'Purchase completed' : 'Purchase failed',
+                            ),
+                          ),
+                        );
+                      }
                     },
               child: state.loading
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('Buy'),
             );
           },

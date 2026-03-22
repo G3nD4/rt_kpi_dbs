@@ -38,18 +38,15 @@ class HomeScreen extends StatelessWidget {
 
                     // read current filter values from FilterCubit
                     final filterState = context.watch<FilterCubit>().state;
-                    final activeChannel = filterState.activeChannel;
-                    final activeCampaign = filterState.activeCampaign;
-
                     var filtered = state.orders;
-                    if (activeChannel != 'All') {
+                    if (filterState.activeChannel != 'All') {
                       filtered = filtered
-                          .where((o) => (o.channel ?? '').toLowerCase() == activeChannel.toLowerCase())
+                          .where((o) => (o.channel ?? '').toLowerCase() == filterState.activeChannel.toLowerCase())
                           .toList();
                     }
-                    if (activeCampaign != 'All') {
+                    if (filterState.activeCampaign != 'All') {
                       filtered = filtered
-                          .where((o) => (o.campaign ?? '').toLowerCase() == activeCampaign.toLowerCase())
+                          .where((o) => (o.campaign ?? '').toLowerCase() == filterState.activeCampaign.toLowerCase())
                           .toList();
                     }
 

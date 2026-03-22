@@ -24,6 +24,7 @@ class OrderCubit extends Cubit<OrderState> {
   final OrderRepository repository;
   final Uuid _uuid = const Uuid();
   String? _customerId;
+  final String _currentCurrency = 'RUB';
 
   String get customerId {
     _customerId ??= _uuid.v4().toString();
@@ -35,7 +36,6 @@ class OrderCubit extends Cubit<OrderState> {
   }
 
   void _loadMockOrders() {
-    final now = DateTime.now().toUtc().toIso8601String();
     final channels = ['web', 'app', 'email', 'store', 'partner'];
     final campaigns = ['brand', 'promo', 'holiday', 'newuser'];
     final products = [
@@ -54,75 +54,71 @@ class OrderCubit extends Cubit<OrderState> {
     ];
 
     final mocked = List.generate(products.length, (i) {
-      final ch = channels[i % channels.length];
-      final camp = campaigns[i % campaigns.length];
-      final product = products[i % products.length];
       return OrderEvent(
-        orderId: product,
+        orderId: products[i % products.length],
         customerId: customerId,
         amount: ((i + 1) * 75.0) + (i % 4) * 25,
-        currency: 'RUB',
-        channel: ch,
-        campaign: camp,
-        eventTime: now,
+        currency: _currentCurrency,
+        channel: channels[i % channels.length],
+        campaign: campaigns[i % campaigns.length],
+        eventTime: DateTime.now().toUtc().toIso8601String(),
         eventId: _uuid.v4().toString(),
       );
     });
     emit(state.copyWith(orders: mocked));
   }
 
-  Future<void> viewOrder(int index, {String? channel, String? campaign}) async {
+  Future<void> viewOrder(OrderEvent order) async {
     final sessionId = _uuid.v4();
     emit(state.copyWith(sessionId: sessionId));
     final event = SessionEvent(
       sessionId: sessionId,
       eventType: 'view',
-      channel: channel,
-      campaign: campaign,
+      channel: order.channel,
+      campaign: order.campaign,
       eventTime: DateTime.now().toUtc().toIso8601String(),
       eventId: _uuid.v4().toString(),
     );
     await repository.sendSession(event);
   }
 
-  Future<void> checkout(int index, {String? channel, String? campaign}) async {
+  Future<void> checkout(OrderEvent order) async {
     final sessionId = state.sessionId ?? _uuid.v4();
     emit(state.copyWith(sessionId: sessionId));
     final event = SessionEvent(
       sessionId: sessionId,
       eventType: 'checkout',
-      channel: channel,
-      campaign: campaign,
+      channel: order.channel,
+      campaign: order.campaign,
       eventTime: DateTime.now().toUtc().toIso8601String(),
       eventId: _uuid.v4().toString(),
     );
     await repository.sendSession(event);
   }
 
-  Future<bool> purchase(int index, {String? channel, String? campaign}) async {
+  Future<bool> purchase(OrderEvent order) async {
     emit(state.copyWith(loading: true));
     final sessionId = state.sessionId ?? _uuid.v4();
-    final order = state.orders[index];
     final purchaseEvent = SessionEvent(
       sessionId: sessionId,
       eventType: 'purchase',
-      channel: channel,
-      campaign: campaign,
+      channel: order.channel,
+      campaign: order.campaign,
       eventTime: DateTime.now().toUtc().toIso8601String(),
       eventId: _uuid.v4().toString(),
     );
     await repository.sendSession(purchaseEvent);
 
     // simulate processing delay
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
 
     final orderEvent = OrderEvent(
       orderId: order.orderId,
       customerId: customerId,
       amount: order.amount,
       currency: 'RUB',
-      channel: channel,
-      campaign: campaign,
+      channel: order.channel,
+      campaign: order.campaign,
       eventTime: DateTime.now().toUtc().toIso8601String(),
       eventId: _uuid.v4().toString(),
     );

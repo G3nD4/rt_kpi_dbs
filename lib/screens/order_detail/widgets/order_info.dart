@@ -4,8 +4,7 @@ import '../../../models/event_models.dart';
 
 class OrderInfo extends StatelessWidget {
   final OrderEvent order;
-  final int index;
-  const OrderInfo({super.key, required this.order, required this.index});
+  const OrderInfo({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {

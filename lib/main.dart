@@ -37,6 +37,7 @@ class MyApp extends StatelessWidget {
         create: (_) => OrderCubit(apiClient: apiClient),
         child: const HomeScreen(),
       ),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

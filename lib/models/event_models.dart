@@ -29,6 +29,9 @@ class OrderEvent {
     'event_time': eventTime,
     'event_id': eventId,
   };
+
+  @override
+  String toString() => toJson().toString();
 }
 
 class SessionEvent {
@@ -59,4 +62,7 @@ class SessionEvent {
     'event_time': eventTime,
     'event_id': eventId,
   };
+
+  @override
+  String toString() => toJson().toString();
 }

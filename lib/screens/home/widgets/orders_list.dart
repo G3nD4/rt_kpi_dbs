@@ -14,25 +14,21 @@ class OrdersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orderCubit = context.read<OrderCubit>();
-
     return ListView.separated(
       itemCount: orders.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      separatorBuilder: (context, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final order = orders[index];
-        final origIndex = orderCubit.state.orders.indexWhere((o) => o.orderId == order.orderId);
         return OrderCard(
           key: ValueKey(order.orderId),
           order: order,
           onTap: () {
-            // Trigger view action but don't await here to avoid using BuildContext
-            // across an async gap; navigation can proceed immediately.
-            orderCubit.viewOrder(origIndex);
+            orderCubit.viewOrder(order);
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => BlocProvider.value(
                   value: orderCubit,
-                  child: OrderDetailScreen(index: origIndex),
+                  child: OrderDetailScreen(order),
                 ),
               ),
             );
