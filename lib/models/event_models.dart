@@ -75,7 +75,7 @@ String _prettyPrintMap(Map<String, dynamic> map) {
   for (var i = 0; i < map.entries.length; i++) {
     final entry = map.entries.elementAt(i);
     final value = entry.value == null ? 'null' : entry.value.toString();
-    buf.writeln('\tentry.key: $value,');
+    buf.writeln('\t${entry.key}: $value,');
   }
   buf.write('}');
   return buf.toString();
