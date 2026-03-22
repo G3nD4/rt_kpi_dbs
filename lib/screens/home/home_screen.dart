@@ -5,6 +5,7 @@ import '../../cubit/order_cubit.dart';
 import 'widgets/filter_bar.dart';
 import 'widgets/orders_list.dart';
 import '../../cubit/filter_cubit.dart';
+import '../../services/logger.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,6 +19,7 @@ class HomeScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(title: const Text('Orders'), backgroundColor: accent),
         backgroundColor: AppTheme.scaffoldBackground,
+        floatingActionButton: const GlobalLoggerButton(),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Column(

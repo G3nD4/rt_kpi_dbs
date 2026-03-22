@@ -5,6 +5,7 @@ import '../../app_theme.dart';
 import '../../cubit/order_cubit.dart';
 import 'widgets/order_info.dart';
 import 'widgets/order_actions.dart';
+import '../../services/logger.dart';
 
 class OrderDetailScreen extends StatelessWidget {
   final OrderEvent order;
@@ -17,6 +18,7 @@ class OrderDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Order details'), backgroundColor: accent),
       backgroundColor: AppTheme.scaffoldBackground,
+      floatingActionButton: const GlobalLoggerButton(),
       body: BlocBuilder<OrderCubit, OrderState>(
         builder: (context, state) {
           return SingleChildScrollView(

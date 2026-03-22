@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../models/event_models.dart';
+import '../services/logger.dart';
 import '../services/api_client.dart';
 import '../repositories/order_repository.dart';
 
@@ -23,12 +24,12 @@ class OrderState {
 class OrderCubit extends Cubit<OrderState> {
   final OrderRepository repository;
   final Uuid _uuid = const Uuid();
-  String? _customerId;
+  String? _userId;
   final String _currentCurrency = 'RUB';
 
-  String get customerId {
-    _customerId ??= _uuid.v4().toString();
-    return _customerId!;
+  String get userId {
+    _userId ??= _uuid.v4().toString();
+    return _userId!;
   }
 
   OrderCubit({required ApiClient apiClient}) : repository = OrderRepository(apiClient), super(OrderState(orders: [])) {
@@ -56,7 +57,7 @@ class OrderCubit extends Cubit<OrderState> {
     final mocked = List.generate(products.length, (i) {
       return OrderEvent(
         orderId: products[i % products.length],
-        customerId: customerId,
+        customerId: userId,
         amount: ((i + 1) * 75.0) + (i % 4) * 25,
         currency: _currentCurrency,
         channel: channels[i % channels.length],
@@ -65,6 +66,9 @@ class OrderCubit extends Cubit<OrderState> {
         eventId: _uuid.v4().toString(),
       );
     });
+    for (final o in mocked) {
+      Logger.instance.log('Mocked OrderEvent: ${o.toString()}');
+    }
     emit(state.copyWith(orders: mocked));
   }
 
@@ -73,12 +77,14 @@ class OrderCubit extends Cubit<OrderState> {
     emit(state.copyWith(sessionId: sessionId));
     final event = SessionEvent(
       sessionId: sessionId,
-      eventType: 'view',
+      eventType: SessionEventType.view,
       channel: order.channel,
       campaign: order.campaign,
       eventTime: DateTime.now().toUtc().toIso8601String(),
       eventId: _uuid.v4().toString(),
+      userId: userId,
     );
+    Logger.instance.log('SessionEvent (view): ${event.toString()}');
     await repository.sendSession(event);
   }
 
@@ -87,12 +93,13 @@ class OrderCubit extends Cubit<OrderState> {
     emit(state.copyWith(sessionId: sessionId));
     final event = SessionEvent(
       sessionId: sessionId,
-      eventType: 'checkout',
+      eventType: SessionEventType.checkout,
       channel: order.channel,
       campaign: order.campaign,
       eventTime: DateTime.now().toUtc().toIso8601String(),
       eventId: _uuid.v4().toString(),
     );
+    Logger.instance.log('SessionEvent (checkout): ${event.toString()}');
     await repository.sendSession(event);
   }
 
@@ -101,12 +108,13 @@ class OrderCubit extends Cubit<OrderState> {
     final sessionId = state.sessionId ?? _uuid.v4();
     final purchaseEvent = SessionEvent(
       sessionId: sessionId,
-      eventType: 'purchase',
+      eventType: SessionEventType.purchase,
       channel: order.channel,
       campaign: order.campaign,
       eventTime: DateTime.now().toUtc().toIso8601String(),
       eventId: _uuid.v4().toString(),
     );
+    Logger.instance.log('SessionEvent (purchase): ${purchaseEvent.toString()}');
     await repository.sendSession(purchaseEvent);
 
     // simulate processing delay
@@ -114,7 +122,7 @@ class OrderCubit extends Cubit<OrderState> {
 
     final orderEvent = OrderEvent(
       orderId: order.orderId,
-      customerId: customerId,
+      customerId: userId,
       amount: order.amount,
       currency: 'RUB',
       channel: order.channel,
@@ -122,7 +130,9 @@ class OrderCubit extends Cubit<OrderState> {
       eventTime: DateTime.now().toUtc().toIso8601String(),
       eventId: _uuid.v4().toString(),
     );
+    Logger.instance.log('OrderEvent (purchase): ${orderEvent.toString()}');
     final ok = await repository.sendOrder(orderEvent);
+    Logger.instance.log('OrderEvent send result: $ok');
     emit(state.copyWith(loading: false));
     return ok;
   }

@@ -1,4 +1,4 @@
-class OrderEvent {
+final class OrderEvent {
   final String orderId;
   final String? customerId;
   final double amount;
@@ -31,12 +31,14 @@ class OrderEvent {
   };
 
   @override
-  String toString() => toJson().toString();
+  String toString() => _prettyPrintMap(toJson());
 }
+
+enum SessionEventType { view, checkout, purchase }
 
 class SessionEvent {
   final String sessionId;
-  final String eventType; // view, checkout, purchase
+  final SessionEventType eventType;
   final String? userId;
   final String? channel;
   final String? campaign;
@@ -55,7 +57,7 @@ class SessionEvent {
 
   Map<String, dynamic> toJson() => {
     'session_id': sessionId,
-    'event_type': eventType,
+    'event_type': eventType.name,
     'user_id': userId,
     'channel': channel,
     'campaign': campaign,
@@ -64,5 +66,17 @@ class SessionEvent {
   };
 
   @override
-  String toString() => toJson().toString();
+  String toString() => _prettyPrintMap(toJson());
+}
+
+String _prettyPrintMap(Map<String, dynamic> map) {
+  final buf = StringBuffer();
+  buf.writeln('{');
+  for (var i = 0; i < map.entries.length; i++) {
+    final entry = map.entries.elementAt(i);
+    final value = entry.value == null ? 'null' : entry.value.toString();
+    buf.writeln('\tentry.key: $value,');
+  }
+  buf.write('}');
+  return buf.toString();
 }

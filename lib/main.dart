@@ -5,6 +5,7 @@ import 'screens/home/home_screen.dart';
 import 'cubit/order_cubit.dart';
 import 'services/api_client.dart';
 import 'config.dart';
+import 'services/logger.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,22 +23,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'KPI Orders',
-      theme: ThemeData.light().copyWith(
-        primaryColor: Colors.blueAccent,
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+    // initialize logger at top of widget tree and provide via LoggerProvider
+    Logger.instance.init();
+    return LoggerProvider(
+      logger: Logger.instance,
+      child: MaterialApp(
+        title: 'KPI Orders',
+        theme: ThemeData.light().copyWith(
+          primaryColor: Colors.blueAccent,
+          scaffoldBackgroundColor: Colors.white,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+          ),
         ),
+        home: BlocProvider(
+          create: (_) => OrderCubit(apiClient: apiClient),
+          child: const HomeScreen(),
+        ),
+        debugShowCheckedModeBanner: false,
       ),
-      home: BlocProvider(
-        create: (_) => OrderCubit(apiClient: apiClient),
-        child: const HomeScreen(),
-      ),
-      debugShowCheckedModeBanner: false,
     );
   }
 }
